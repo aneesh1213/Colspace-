@@ -1,0 +1,55 @@
+/* styles.css */
+
+body {
+    background: linear-gradient(to bottom, #F8F8F9, #111439);
+    color: #ffffff;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.file-list {
+    list-style: none;
+    padding: 0;
+}
+
+.file-list li {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #111439;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-list li a {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.upload-btn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+.btn-secondary,
+.btn-secondary:hover {
+    background-color: #111439;
+    border-color: #111439;
+    color: #ffffff;
+}
+
+.btn-primary,
+.btn-primary:hover {
+    background-color: #4A8BDF;
+    border-color: #4A8BDF;
+    color: #ffffff;
+}

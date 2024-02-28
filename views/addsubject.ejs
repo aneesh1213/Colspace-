@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Head content for add-subject.ejs, including Bootstrap styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+    <% const departmentId = locals.departmentId; %>
+    <% const subjectId = locals.subjectId; %>
+    <div class="container">
+        <h2 class="pb-2 border-bottom department-title" style="color: #000000;">Add Subject for <%= departmentName %></h2>
+
+        <!-- Form to add a subject -->
+        <form action="/addsubject/<%= departmentId %>" method="post">
+            <div class="mb-3">
+                <label for="subjectName" class="form-label" style="color: #05CDB9;">Subject Name:</label>
+                <input type="text" class="form-control" id="subjectName" name="subjectName" required="">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Subject</button>
+        </form>
+
+        <!-- Navigation Back to Subjects Page -->
+        <!-- Navigation Back to Subjects Page -->
+        <!-- Navigation Back to Subjects Page -->
+        <!-- Navigation Back to Subjects Page -->
+<!-- Navigation Back to Subjects Page -->
+    <a href="/subjects/<%= departmentId %>" class="btn btn-secondary mt-3">Back to Subjects Page</a>
+
+
+
+    </div>
+
+    <!-- Bootstrap JS and additional scripts (if any) -->
+</body>
+
+</html>

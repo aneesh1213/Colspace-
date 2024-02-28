@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Add Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- Add custom styles -->
+    <style>
+        body {
+            background: linear-gradient(to bottom, #05386B, #05CDB9);
+            color: #EDF5E1;
+        }
+
+        .container {
+            background-color: #EDF5E1;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .subject-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .subject-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #05386B;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subject-list li a {
+            text-decoration: none;
+            color: #000000;
+        }
+
+        .btn-secondary,
+        .btn-secondary:hover {
+            background-color: #05386B;
+            border-color: #05386B;
+            color: #ffffff;
+        }
+
+        .department-title {
+            color: #000000;
+        }
+
+        .files-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .files-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #3498db;
+            border-radius: 8px;
+        }
+
+        .files-list li a {
+            text-decoration: none;
+            color: #ffffff;
+        }
+
+        .files-list li a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="pb-2 border-bottom department-title" style="color: #000000;">Department: <%= departmentName %></h2>
+
+        <ul class="subject-list">
+            <% if (subjects && subjects.length) { %>
+              <% subjects.forEach(subject => { %>
+                <li class="d-flex justify-content-between align-items-center">
+                  <span><%= subject.name %></span>
+                  <a href="/explore/<%= departmentId %>/<%= subject._id %>" style="display: inline-block; padding: 10px 20px; background-color: #3498db; color: #fff; text-decoration: none; border-radius: 5px; transition: background-color 0.3s;">Explore</a>
+                </li>
+              <% }); %>
+            <% } else { %>
+              <li>No subjects available</li>
+            <% } %>
+          </ul>
+          
+        
+        <!-- Add Subject Button -->
+        <a href="/addsubject/<%= departmentId %>" class="btn btn-primary mt-3">
+            Add Subject
+        </a>
+        
+        <!-- Navigation Back to Main Dashboard -->
+        <a href="/" class="btn btn-secondary mt-3"
+            style="background-color: #05386B; border-color: #05386B; color: #ffffff;">Back to Main Dashboard</a>
+    </div>
+
+    <!-- Add Bootstrap JS (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>
+
