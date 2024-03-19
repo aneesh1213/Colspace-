@@ -160,7 +160,7 @@ db.once('open', async () => {
 
 
 // getting department by id
-app.get('/department/:id', authenticateJwt ,async (req, res) => {
+app.get('/department/:id' ,async (req, res) => {
   const departmentId = req.params.id;
   try {
     const departmentData = await Department.findById(departmentId).populate('subjects');

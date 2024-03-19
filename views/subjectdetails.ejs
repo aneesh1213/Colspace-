@@ -40,6 +40,20 @@
             background-color: #28a745;
             color: #fff;
         }
+
+        /* Custom styling for file name and download button */
+        .file-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .file-name {
+            flex: 1;
+        }
+
+        .download-btn {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -54,11 +68,13 @@
         <h3>Notes</h3>
         <ul>
             <% filesByCategory.notes.forEach(note=> { %>
-            <li>
-                <a href="<%= note.fileLink %>">
-                    <%= note.title %>
-                </a>
-                <a href="<%= note.fileLink %>" download class="btn btn-sm btn-primary">Download</a>
+            <li class="file-info">
+                <div class="file-name">
+                    <a href="<%= note.fileLink %>">
+                        <%= note.title %>
+                    </a>
+                </div>
+                <a href="<%= note.fileLink %>" download class="btn btn-sm btn-primary download-btn">Download</a>
             </li>
             <% }) %>
         </ul>
@@ -67,11 +83,13 @@
         <h3>Assignments</h3>
         <ul>
             <% filesByCategory.assignments.forEach(assignment=> { %>
-            <li>
-                <a href="<%= assignment.fileLink %>">
-                    <%= assignment.title %>
-                </a>
-                <a href="<%= assignment.fileLink %>" download class="btn btn-sm btn-primary">Download</a>
+            <li class="file-info">
+                <div class="file-name">
+                    <a href="<%= assignment.fileLink %>">
+                        <%= assignment.title %>
+                    </a>
+                </div>
+                <a href="<%= assignment.fileLink %>" download class="btn btn-sm btn-primary download-btn">Download</a>
             </li>
             <% }) %>
         </ul>
@@ -80,11 +98,13 @@
         <h3>PowerPoints (PPTs)</h3>
         <ul>
             <% filesByCategory.ppts.forEach(ppt=> { %>
-            <li>
-                <a href="<%= ppt.fileLink %>">
-                    <%= ppt.title %>
-                </a>
-                <a href="<%= ppt.fileLink %>" download class="btn btn-sm btn-primary">Download</a>
+            <li class="file-info">
+                <div class="file-name">
+                    <a href="<%= ppt.fileLink %>">
+                        <%= ppt.title %>
+                    </a>
+                </div>
+                <a href="<%= ppt.fileLink %>" download class="btn btn-sm btn-primary download-btn">Download</a>
             </li>
             <% }) %>
         </ul>
@@ -93,11 +113,13 @@
         <h3>Question Papers</h3>
         <ul>
             <% filesByCategory.questionPapers.forEach(questionPaper=> { %>
-            <li>
-                <a href="<%= questionPaper.fileLink %>">
-                    <%= questionPaper.title %>
-                </a>
-                <a href="<%= questionPaper.fileLink %>" download class="btn btn-sm btn-primary">Download</a>
+            <li class="file-info">
+                <div class="file-name">
+                    <a href="<%= questionPaper.fileLink %>">
+                        <%= questionPaper.title %>
+                    </a>
+                </div>
+                <a href="<%= questionPaper.fileLink %>" download class="btn btn-sm btn-primary download-btn">Download</a>
             </li>
             <% }) %>
         </ul>
