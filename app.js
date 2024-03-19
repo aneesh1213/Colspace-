@@ -13,7 +13,7 @@ const { Types } = require('mongoose');
 const Department = require('./models/department');
 const jwt = require('jsonwebtoken');
 const ObjectId = mongoose.Types.ObjectId;
-const Subject = require('./models/Subject');
+const Subject = require('./models/subject');
 const User = require('./models/user'); // Import the User model
 // Configure multer to store files in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -38,64 +38,64 @@ mongoose.connect('mongodb+srv://aneeshkulkarni007:583683@cluster1.ntnjyms.mongod
 });
 
 // login and authentication stuff over here 
-const SECRET = 'SECr3t';
+// const SECRET = 'SECr3t';
 
-function generateToken(user) {
-  return jwt.sign({ id: user._id, name: user.name }, SECRET, { expiresIn: '1h' });
-}
+// function generateToken(user) {
+//   return jwt.sign({ id: user._id, name: user.name }, SECRET, { expiresIn: '1h' });
+// }
 
-const authenticateJwt = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader) {
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, SECRET, (err, user) => {
-      if (err) {
-        return res.sendStatus(403);
-      }
-      req.user = user;
-      next();
-    });
-  } else {
-    res.sendStatus(401);
-  }
-};
+// const authenticateJwt = (req, res, next) => {
+//   const authHeader = req.headers.authorization;
+//   if (authHeader) {
+//     const token = authHeader.split(' ')[1];
+//     jwt.verify(token, SECRET, (err, user) => {
+//       if (err) {
+//         return res.sendStatus(403);
+//       }
+//       req.user = user;
+//       next();
+//     });
+//   } else {
+//     res.sendStatus(401);
+//   }
+// };
 
-// Routes
-app.get('/login', (req, res) => {
-  res.render('login.ejs');
-});
+// // Routes
+// app.get('/login', (req, res) => {
+//   res.render('login.ejs');
+// });
 
-app.post('/login', async (req, res) => {
-  const { username, password } = req.headers;
-  const user = await User.findOne({ username, password });
-  if (user) {
-    const token = jwt.sign({ username, role: 'user' }, SECRET, { expiresIn: '1h' });
-    res.json({ message: 'Logged in successfully', token });
-  } else {
-    res.status(403).json({ message: 'Invalid username or password' });
-  }
-});
-app.get('/signup', (req, res) => {
-  res.render('signup.ejs');
-});
+// app.post('/login', async (req, res) => {
+//   const { username, password } = req.headers;
+//   const user = await User.findOne({ username, password });
+//   if (user) {
+//     const token = jwt.sign({ username, role: 'user' }, SECRET, { expiresIn: '1h' });
+//     res.json({ message: 'Logged in successfully', token });
+//   } else {
+//     res.status(403).json({ message: 'Invalid username or password' });
+//   }
+// });
+// app.get('/signup', (req, res) => {
+//   res.render('signup.ejs');
+// });
 
-app.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    const user = await User.findOne({ username });
-    if (user) {
-      return res.status(403).json({ message: 'User already exists' });
-    }
-    const newUser = new User({ username, password });
-    await newUser.save();
-    // Generate JWT token for the new user
-    const token = generateToken(newUser);
-    res.json({ message: 'User created successfully', token });
-  } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+// app.post('/signup', async (req, res) => {
+//   const { username, password } = req.body;
+//   try {
+//     const user = await User.findOne({ username });
+//     if (user) {
+//       return res.status(403).json({ message: 'User already exists' });
+//     }
+//     const newUser = new User({ username, password });
+//     await newUser.save();
+//     // Generate JWT token for the new user
+//     const token = generateToken(newUser);
+//     res.json({ message: 'User created successfully', token });
+//   } catch (error) {
+//     console.error('Error creating user:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
 const db = mongoose.connection;
 
