@@ -1,20 +1,20 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const { MongoClient, ServerApiVersion } = require('mongodb'); 
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const axios = require('axios');
 const fs = require('fs');
 const File = require('./models/file');
+const bcrypt = require('bcrypt');
 const path = require('path');
 const multer = require('multer');
 const { Types } = require('mongoose');
 // Add this line at the top of your app.js
-const Department  = require('./models/department');
-
+const Department = require('./models/department');
+const jwt = require('jsonwebtoken');
 const ObjectId = mongoose.Types.ObjectId;
-
-const Subject  = require('./models/subject');
-
+const Subject = require('./models/Subject');
+const User = require('./models/user'); // Import the User model
 // Configure multer to store files in memory
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -23,6 +23,7 @@ const app = express();
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));  // Serving static files
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Internal Server Error');
@@ -36,6 +37,65 @@ mongoose.connect('mongodb+srv://aneeshkulkarni007:583683@cluster1.ntnjyms.mongod
   tls: true
 });
 
+// login and authentication stuff over here 
+const SECRET = 'SECr3t';
+
+function generateToken(user) {
+  return jwt.sign({ id: user._id, name: user.name }, SECRET, { expiresIn: '1h' });
+}
+
+const authenticateJwt = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, SECRET, (err, user) => {
+      if (err) {
+        return res.sendStatus(403);
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
+};
+
+// Routes
+app.get('/login', (req, res) => {
+  res.render('login.ejs');
+});
+
+app.post('/login', async (req, res) => {
+  const { username, password } = req.headers;
+  const user = await User.findOne({ username, password });
+  if (user) {
+    const token = jwt.sign({ username, role: 'user' }, SECRET, { expiresIn: '1h' });
+    res.json({ message: 'Logged in successfully', token });
+  } else {
+    res.status(403).json({ message: 'Invalid username or password' });
+  }
+});
+app.get('/signup', (req, res) => {
+  res.render('signup.ejs');
+});
+
+app.post('/signup', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const user = await User.findOne({ username });
+    if (user) {
+      return res.status(403).json({ message: 'User already exists' });
+    }
+    const newUser = new User({ username, password });
+    await newUser.save();
+    // Generate JWT token for the new user
+    const token = generateToken(newUser);
+    res.json({ message: 'User created successfully', token });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 const db = mongoose.connection;
 
@@ -45,7 +105,7 @@ db.once('open', async () => {
   try {
     // Check if there are no departments
     const existingDepartments = await Department.countDocuments();
-    
+
     if (existingDepartments === 0) {
       // Insert initial departments
       const computerScience = new Department({
@@ -99,157 +159,62 @@ db.once('open', async () => {
 
 
 
-// route for file upload
-
-
-// route for downloading files by iid
-
-// route for rendering department page
-// Route for rendering department page
-app.get('/department/:id', async (req, res) => {
+// getting department by id
+app.get('/department/:id', authenticateJwt ,async (req, res) => {
   const departmentId = req.params.id;
-
   try {
-    const departmentData = await Department.findById(departmentId);
-
+    const departmentData = await Department.findById(departmentId).populate('subjects');
     if (!departmentData) {
-      return res.status(404).send('Department not found');
+      return res.status(404).send("department not found!!");
     }
 
     const departmentName = departmentData.name;
+    console.log(departmentName);
+
     const subjects = departmentData.subjects || [];
+    console.log("subjects from the currecnt department are :", subjects);
 
-    const files = await File.find({ department: departmentId });
-
-    const filesByCategory = subjects.reduce((result, subject) => {
-      result[subject._id] = {
-        notes: subject.notes || [],
-        assignments: subject.assignments || [],
-        ppts: subject.ppts || [],
-        questionPapers: subject.questionPapers || [],
-        other: subject.other || [],
-      };
-      return result;
-    }, {});
-
-    res.render('department.ejs', {
-      departmentName,
-      subjects,
-      files,
-      filesByCategory,
-      departmentId: departmentId, // Add this line to pass departmentId
-    });
-  } catch (error) {
-    console.error('Error rendering department page:', error);
-    res.status(500).send('Internal Server Error');
+    console.log("the data from found department is :", departmentData);
+    res.render('department.ejs', { departmentName, departmentId: departmentId, subjects })
+  }
+  catch (err) {
+    console.log("error for catching the department");
   }
 });
 
-
-
-
-app.get('/subjects/:departmentId', async (req, res) => {
+app.get('/subjects/:departmentId/:subjectId', async(req, res)=>{
+  const departmentId = req.params.departmentId;
+  res.redirect(`/department/${departmentId}`);
+})
+// adding subject rendering page 
+app.get("/addsubject/:departmentId", async (req, res) => {
   try {
     const departmentId = req.params.departmentId;
-
-    // Fetch department data based on departmentId
-    const department = await Department.findById(departmentId).populate('subjects');
-
-    if (!department) {
-      return res.status(404).send('Department not found');
-    }
-
-    // Extract necessary data (e.g., subjects) from the department
-    const subjects = department.subjects || [];
-
-    // Render the department.ejs template with departmentId and subjects
-    res.render('department.ejs', { departmentName: department.name, subjects, departmentId });
-  } catch (error) {
-    console.error('Error rendering department page:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-
-
-// Route for rendering the content of a specific subject
-// Route for rendering the content of a specific subject
-// Modify the route for rendering the subject details
-// Route for rendering the content of a specific subject
-app.get('/explore/:departmentId/:subjectId', async (req, res) => {
-  try {
-    // Add the following lines to obtain subjectId and departmentId
-    const subjectId = req.params.subjectId;
-    const departmentId = req.params.departmentId;
-    console.log('Received departmentId:', departmentId);
-    console.log('Received subjectId:', subjectId);
-
-    // Adjust the query criteria based on your data model
-    const department = await Department.findById(departmentId);
-    
-    console.log('Fetched department:', department); // Add this line for debugging
-
-    if (!department) {
-      return res.status(404).send('Department not found');
-    }
-
-    if (!subjectId) {
-      return res.status(404).send('Subject ID is missing');
-    }
-
-    // Find the subject in the department
-    const subject = department.subjects.find(s => s && s._id && s._id.equals(subjectId));
-
-    if (!subject) {
-      return res.status(404).send('Subject not found');
-    }
-
-    const filesByCategory = {
-      notes: subject.notes || [],
-      assignments: subject.assignments || [],
-      ppts: subject.ppts || [],
-      questionPapers: subject.questionPapers || [],
-      other: subject.other || [],
-    };
-
-    // Pass subjectId and departmentId to the template
-    res.render('subjectdetails.ejs', { departmentName: department.name, subject, filesByCategory, subjectId, departmentId });
-  } catch (error) {
-    console.error('Error exploring subject:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-app.get('/addsubject/:departmentId', async (req, res) => {
-  try {
-    const departmentId = req.params.departmentId;
-
-    // Fetch the department data based on departmentId
     const department = await Department.findById(departmentId);
 
     if (!department) {
-      return res.status(404).send('Department not found');
+      return res.status(404).send("DEpartment not found");
     }
 
     const departmentName = department.name;
-
     res.render('addsubject.ejs', { departmentName, departmentId });
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error rendering addsubject page:', error);
     res.status(500).send('Internal Server Error');
   }
+
 });
 
 
-// Route for processing the form submission when adding a subject
-// Route for processing the form submission when adding a subject
-app.post('/addsubject/:departmentId', async (req, res) => {
+// aadding the subjects to the respective departmemnt
+app.post("/addsubject/:departmentId", async (req, res) => {
   try {
     const departmentId = req.params.departmentId;
     const { subjectName } = req.body;
 
     // Find the department by ID
-    const department = await Department.findById(departmentId);
+    const department = await Department.findById(departmentId).populate('subjects');
 
     if (!department) {
       return res.status(404).send('Department not found');
@@ -266,94 +231,85 @@ app.post('/addsubject/:departmentId', async (req, res) => {
 
     // Update the department's subjects array
     department.subjects.push(subject._id);
-    
+
     // Save the updated department
     await department.save();
 
     // Redirect or send response as needed
-    res.redirect(`/subjects/${departmentId}`);
+    res.redirect(`/department/${departmentId}`);
   } catch (error) {
     console.error('Error adding subject:', error);
     res.status(500).send('Internal Server Error');
   }
+
 });
 
-
-
-app.get('/:category/:departmentId/:subjectId', async (req, res) => {
+// exploring the content of the subject 
+app.get("/explore/:departmentId/:subjectId", async (req, res) => {
   try {
-    const { category, departmentName, subjectId, departmentId } = req.params;
-
-    // Find the department
-    const department = await Department.findOne({ name: departmentId });
-
-    if (!department) {
-      return res.status(404).send('Department not found');
-    }
-
-    // Find the subject in the department
-    const subject = department.subjects.id(subjectId);
-
+    const departmentId = req.params.departmentId;
+    const subjectId = req.params.subjectId;
+    
+    // Retrieve the Subject document and populate files
+    const subject = await Subject.findById(subjectId).populate('files');
+    
+    // Check if the subject was found
     if (!subject) {
+      console.error('Subject not found');
       return res.status(404).send('Subject not found');
     }
-
-    // Fetch files or perform other actions related to the category
-    // For example, fetch notes, ppts, assignments based on the category
-
-    const files = subject[category.toLowerCase()] || [];
-
-    // Render the template with the category data
-    res.render('subjectdetails.ejs', { departmentId, subject, category, files });
-  } catch (error) {
-    console.error('Error exploring subject:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-
-
-// Route for rendering subject page
-// Route for rendering subject page
-app.get('/subjects/:departmentId/:subjectId', async (req, res) => {
-  const departmentId = req.params.departmentId;
-  const subjectId = req.params.subjectId;
-  const departmentName = req.params.departmentName;
-  try {
-    const selectedSubject = await Subject.findById(subjectId);
-    if (!selectedSubject) {
-      return res.redirect(`/subjects/${departmentId}`);
+    // Ensure the subject belongs to the specified department
+    if (subject.department.toString() !== departmentId) {
+      return res.status(404).send('Subject does not belong to the specified department');
     }
 
+    // Construct the filesByCategory object
     const filesByCategory = {
-      notes: selectedSubject.notes || [],
-      assignments: selectedSubject.assignments || [],
-      ppts: selectedSubject.ppts || [],
-      questionPapers: selectedSubject.questionPapers || [],
-      other: selectedSubject.other || [],
+      notes: [],
+      assignments: [],
+      ppts: [],
+      questionPapers: [],
+      other: []
     };
 
-    const subjects = []; // Add logic to retrieve subjects if needed
-
-    // Pass the departmentName variable to the template
-    res.render('department.ejs', {
-      departmentName: selectedSubject.name,  // Use the subject name or any other relevant value
-      subjects: subjects,
-      selectedSubject: selectedSubject,
-      filesByCategory: filesByCategory,
-      departmentName:departmentName,
-      departmentId: departmentId, // Add this line to pass departmentId
+    // Categorize files
+    subject.files.forEach(file => {
+      switch (file.category) {
+        case 'notes':
+          filesByCategory.notes.push(file);
+          break;
+        case 'assignments':
+          filesByCategory.assignments.push(file);
+          break;
+        case 'ppts':
+          filesByCategory.ppts.push(file);
+          break;
+        case 'questionPapers':
+          filesByCategory.questionPapers.push(file);
+          break;
+        default:
+          filesByCategory.other.push(file);
+          break;
+      }
     });
-  } catch (error) {
-    console.error('Error rendering subject page:', error);
-    res.status(500).send('Internal Server Error');
+
+    res.render('subjectdetails.ejs', {
+      departmentName: subject.department.name,
+      subject,
+      filesByCategory,
+      subjectId,
+      departmentId
+    });
+  } catch (err) {
+    console.log('Error exploring subject:', err);
+    res.status(500).send('Internal server error');
   }
 });
 
 
 
-// Route for handling file uploads
-app.post('/upload/:departmentId/:subjectId', upload.single('file'), async (req, res) => {
+// uploading the file to respective department
+app.post("/upload/:departmentId/:subjectId", upload.single('file'), async (req, res) => {
   try {
     const { category } = req.body;
     const subjectId = req.params.subjectId;
@@ -369,95 +325,41 @@ app.post('/upload/:departmentId/:subjectId', upload.single('file'), async (req, 
       return res.status(400).json({ error: 'Invalid departmentId format' });
     }
 
-    // Your existing code for creating and saving the File document
+    // Create a new File document
     const file = new File({
       title: req.file.originalname,
       category: category,
       fileLink: 'data:' + req.file.mimetype + ';base64,' + req.file.buffer.toString('base64'),
-      department: new mongoose.Types.ObjectId(departmentId), // Use mongoose.Types.ObjectId
+      subject: new mongoose.Types.ObjectId(subjectId), // Convert subjectId to ObjectId
+      department: new mongoose.Types.ObjectId(departmentId), // Convert departmentId to ObjectId
     });
 
     // Save the file
     await file.save();
 
     // Update the corresponding subject with the new file
-    const department = await Department.findById(departmentId);
-
-console.log('Received departmentId:', departmentId);
-console.log('Fetched department:', department);
-
-if (!department) {
-  return res.status(404).json({ error: 'Department not found' });
-}
-
-
-    const subject = department.subjects.find(s => s._id.equals(subjectId));
-
-    // Check if the subject is found
+    const subject = await Subject.findById(subjectId);
     if (!subject) {
       return res.status(404).json({ error: 'Subject not found' });
     }
 
-    // Ensure subject.files is an array
-    if (!subject.files) {
-      subject.files = [];
-    }
-
+    // Push the newly uploaded file to the subject's files array
     subject.files.push(file);
-    await department.save(); // Save the updated department
+    await subject.save(); // Save the updated subject
 
     // Redirect or send a response as needed
     const subjectDetailsURL = `/explore/${departmentId}/${subjectId}`;
     res.redirect(subjectDetailsURL);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+    console.log("Error occurred while uploading", error);
+    res.status(500).json({ error: "Internal server error: " + error.message });
   }
 });
 
 
 
-
-app.get('/download/:departmentId/:subjectId/:category/:fileId', async (req, res) => {
-  try {
-      const { departmentName, subjectId, category, fileId, departmentId } = req.params;
-
-      // Find the department
-      const department = await Department.findOne({ name: departmentId });
-
-      if (!department) {
-          return res.status(404).send('Department not found');
-      }
-
-      // Find the subject in the department
-      const subject = department.subjects.id(subjectId);
-
-      if (!subject) {
-          return res.status(404).send('Subject not found');
-      }
-
-      // Find the file in the subject
-      const file = subject[category.toLowerCase()].id(fileId);
-
-      if (!file) {
-          return res.status(404).send('File not found');
-      }
-
-      // Set appropriate headers and send the file
-      res.set('Content-Type', 'application/octet-stream');
-      res.set('Content-Disposition', `attachment; filename="${file.title}"`);
-      res.send(Buffer.from(file.fileLink.split(',')[1], 'base64'));
-  } catch (error) {
-      console.error(error);
-      res.status(500).send('Internal Server Error');
-  }
-});
-
-
-// Define the route to render the main page
-// Update the route for rendering the main page
-// Example logging in the main route
-app.get('/', async (req, res) => {
+// Home route
+app.get('/' ,async (req, res) => {
   try {
     const departments = await Department.find();
     console.log('Departments:', departments); // Add this line for debugging
@@ -468,7 +370,7 @@ app.get('/', async (req, res) => {
   }
 });
 
-  
+
 
 app.listen(3000, () => {
   console.log('Server started on port 3000');

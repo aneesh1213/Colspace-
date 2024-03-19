@@ -17,22 +17,52 @@
         .header-section {
             background-color: #05386B;
             color: #EDF5E1;
-            padding: 40px 0;
+            padding: 40px 20px; /* Adjust padding */
+            position: relative;
+            margin-bottom: 30px; /* Add margin bottom */
         }
 
-        .feature-section {
+        .header-title {
+            display: inline-block;
+            margin-right: 20px; /* Add margin right */
+        }
+
+        .login-signup-buttons {
+            position: absolute;
+            top: 50%;
+            right: 30px; /* Adjust right position */
+            transform: translateY(-50%);
+        }
+
+        .login-signup-buttons .btn {
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Style for department cards */
+        .department-card {
             background-color: #EDF5E1;
-            padding: 60px 0;
-            border-radius: 15px;
+            padding: 20px;
+            border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-primary {
+        .department-card h3 {
+            margin-bottom: 10px;
+            color: black; /* Set department name text color to black */
+        }
+
+        .department-card p {
+            margin-bottom: 20px;
+            color: black; /* Set department description text color to black */
+        }
+
+        .explore-btn {
             background-color: #05386B;
             border-color: #05386B;
         }
 
-        .btn-primary:hover {
+        .explore-btn:hover {
             background-color: #ffffff;
             color: #05386B;
         }
@@ -41,31 +71,26 @@
 
 <body>
     <div class="header-section text-center">
-        <h1 class="display-4 fw-bold">COLLEGESPACE</h1>
-        <p class="lead">Your Gateway to Educational Resources</p>
+        <div class="header-title">
+            <h1 class="display-4 fw-bold">COLLEGESPACE</h1>
+            <p class="lead">Your Gateway to Educational Resources</p>
+        </div>
+        
+        <!-- Login and Signup Buttons -->
+        <div class="login-signup-buttons">
+            <a href="/login" class="btn btn-primary">Login</a>
+            <a href="/signup" class="btn btn-primary">Signup</a>
+        </div>
     </div>
 
-    <div class="feature-section container py-5">
-        <h2 class="pb-2 border-bottom " style="color: black; text-align: center;">Departments</h2>
-        <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+    <div class="container">
+        <div class="row">
             <% for (const department of departments) { %>
-                <div class="col d-flex align-items-start">
-                    <div
-                        class="icon-square text-body-emphasis bg-body-secondary d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3">
-                        <svg class="bi" width="1em" height="1em">
-                            <use xlink:href="#toggles2"></use>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="fs-2 text-body-emphasis" style="color: black;">
-                            <%= department.name %>
-                        </h3>
-                        <p style="color: black;">
-                            <%= department.description %>
-                        </p>
-                        <a href="/department/<%= department._id %>" class="btn btn-primary">
-                            Explore
-                        </a>
+                <div class="col-md-4 mb-4">
+                    <div class="department-card">
+                        <h3><%= department.name %></h3>
+                        <p><%= department.description %></p>
+                        <a href="/department/<%= department._id %>" class="btn btn-primary explore-btn">Explore</a>
                     </div>
                 </div>
             <% } %>

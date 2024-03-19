@@ -10,7 +10,7 @@ const fileSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Notes', 'Assignments', 'PPTs', 'Question Papers', 'Other'],
+    enum: ['notes', 'assignments', 'ppts', 'questionPapers', 'other'],
   },
   fileLink: {
     type: String,
@@ -20,6 +20,13 @@ const fileSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subject',
     required: true,
+    validate: {
+      validator: async function (value) {
+        const subject = await mongoose.model('Subject').findOne({ _id: value });
+        return subject !== null;
+      },
+      message: 'Invalid subject specified.',
+    },
   },
 });
 
